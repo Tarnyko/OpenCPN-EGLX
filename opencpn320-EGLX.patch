@@ -1,5 +1,5 @@
---- CMakeLists.txt	2013-02-26 21:29:24.000000000 +0100
-+++ CMakeLists.txt	2013-10-07 13:38:43.000000000 +0200
+--- CMakeLists.txt	Tue Feb 26 20:29:24 2013
++++ CMakeLists.txt	Mon Oct 28 22:27:52 2013
 @@ -32,7 +32,7 @@
  
  # define minimum cmake version
@@ -14,7 +14,7 @@
    IF (EXISTS /etc/debian_version)
      SET (PACKAGE_FORMAT "DEB")
 -    SET (PACKAGE_DEPS "libc6, libwxgtk2.8-0 (>= 2.8.7.1), libglu1-mesa (>= 7.0.0), libgl1-mesa-glx (>= 7.0.0), zlib1g, bzip2, libtinyxml2.6.2, libportaudio2")
-+    SET (PACKAGE_DEPS "libc6, libwxgtk2.8-0 (>= 2.8.7.1), zlib1g, bzip2, libtinyxml2.6.2, libportaudio2")
++    SET (PACKAGE_DEPS "libc6, libwxgtk2.8-0 (>= 2.8.7.1), wayland-client, wayland-egl, egl, zlib1g, bzip2, libtinyxml2.6.2, libportaudio2")
      SET (PACKAGE_RECS "xcalib")
      SET (LIB_INSTALL_DIR "lib")
      IF (CMAKE_SIZEOF_VOID_P MATCHES "8")
@@ -61,6 +61,10 @@
 -FIND_PACKAGE(GTK2 2.6)
 -IF (GTK2_FOUND)
 -    MESSAGE (STATUS "Found GTK2")
+-    ADD_DEFINITIONS(-DocpnUSE_GTK_OPTIMIZE)
+-    ADD_DEFINITIONS(-DocpnHAS_GTK)
+-    INCLUDE_DIRECTORIES(${GTK2_INCLUDE_DIRS})
+-    SET(EXTRA_LIBS ${EXTRA_LIBS} ${GTK2_LIBRARIES})
 +#FIND_PACKAGE(GTK2 2.6)
 +#IF (GTK2_FOUND)
 +#    MESSAGE (STATUS "Found GTK2")
@@ -71,18 +75,16 @@
 +
 +FIND_PACKAGE(GTK3)
 +IF (GTK3_FOUND)
-+    MESSAGE (STATUS "Found GTK3")
-     ADD_DEFINITIONS(-DocpnUSE_GTK_OPTIMIZE)
-     ADD_DEFINITIONS(-DocpnHAS_GTK)
--    INCLUDE_DIRECTORIES(${GTK2_INCLUDE_DIRS})
--    SET(EXTRA_LIBS ${EXTRA_LIBS} ${GTK2_LIBRARIES})
-+    INCLUDE_DIRECTORIES(${GTK3_INCLUDE_DIRS})
-+    SET(EXTRA_LIBS ${EXTRA_LIBS} ${GTK3_LIBRARIES})
++     MESSAGE (STATUS "Found GTK3")
++     ADD_DEFINITIONS(-DocpnUSE_GTK_OPTIMIZE)
++     ADD_DEFINITIONS(-DocpnHAS_GTK)
++     INCLUDE_DIRECTORIES(${GTK3_INCLUDE_DIRS})
++     SET(EXTRA_LIBS ${EXTRA_LIBS} ${GTK3_LIBRARIES})
  
      # Add a definition to satisfy some linux system builds, avoiding Apple builds
      IF (NOT WIN32 AND NOT APPLE)
 -       ADD_DEFINITIONS("`pkg-config --cflags --libs gtk+-2.0`")
-+		ADD_DEFINITIONS("`pkg-config --cflags --libs gtk+-3.0`")
++       ADD_DEFINITIONS("`pkg-config --cflags --libs gtk+-3.0`")
 +       #ADD_DEFINITIONS("`pkg-config --cflags --libs gtk+-2.0`")
      ENDIF (NOT WIN32 AND NOT APPLE)
  
@@ -99,23 +101,6 @@
  
  IF(UNIX)
  INCLUDE("FindPortaudio.cmake")
-@@ -669,9 +682,13 @@
-   SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -arch ${ARCH} -Wno-deprecated -Wno-deprecated-declarations")
-   SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g -O3 -arch ${ARCH} -Wno-deprecated -Wno-deprecated-declarations")
- 
--  SET(CMAKE_EXE_LINKER_FLAGS "-O2 -arch ${ARCH}")
--  SET(CMAKE_SHARED_LINKER_FLAGS "-O2 -arch ${ARCH}")
--  SET(CMAKE_MODULE_LINKER_FLAGS "-O2 -arch ${ARCH}")
-+SET (MYLIBS "-L/opt/wayland120/lib -ljwzGL -lwayland-client -lwayland-egl -lEGL -lEGLX -lGLESv1_CM")
-+
-+  SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -O2 -arch ${ARCH}" -lwayland-egl)
-+  SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -O2 -arch ${ARCH}")
-+  SET(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -O2 -arch ${ARCH}")
-+
-+SET(EXTRA_LIBS ${EXTRA_LIBS} ${MYLIBS})
- 
-   SET(SRCS ${SRCS}
-     include/macutils.h
 --- include/dychart.h	2013-10-07 13:50:34.000000000 +0200
 +++ include/dychart.h	2013-10-07 13:56:12.000000000 +0200
 @@ -214,14 +214,22 @@
